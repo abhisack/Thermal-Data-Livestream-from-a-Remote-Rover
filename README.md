@@ -4,5 +4,5 @@ This is the full code (backend + microcontroller code) of one of the college pro
 ## Main Components-
 1. Arduino Uno Micro-controller
 2. SparkFun MLX90614 Thermal Sensor
-3. HC05 Bluetooth Module
+3. 'HC05' Bluetooth Module
 4. 'serial.io' module to handle serial communication of data via bluetooth
