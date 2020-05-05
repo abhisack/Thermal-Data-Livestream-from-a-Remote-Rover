@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Rover Dashboard</title>
+        <link rel="stylesheet" href="/main.css">
+        <link rel="stylesheet" href="/gauge.css">
+        <link rel="stylesheet" href="/rickshaw.css">
+        <script type="text/javascript" src="/jquery.js"></script>
+        <script type="text/javascript" src="/gauge.js"></script>
+        <script type="text/javascript" src="/d3.js"></script>
+        <script type="text/javascript" src="/rickshaw.js"></script>
+    </head>
+    
+    <body>
+      <header>
+        <h1>Rover Dashboard</h1>
+      </header>
+      <div id="gauge" class="gauge-container"></div>
+
+      <div id="chart_container">
+          <div id="y_axis"></div>
+          <div id="demo_chart"></div>
+      </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var text;
+            var socket = io();
+
+ //on receiving 'sendToClient event (sent) from from server run the given callback'
+ //i.e. listen to 'sendToClientEvent' from server
+      socket.on('sendToClient', function (data) {
+            text = data.hello;
+            console.log(data);
+            console.log(text);
+ //send a socket event to server with some data
+            socket.emit('receivedFromClient', { my: "data from client" });
+         });
+
+
+//gauge stuff
+  let gaugeOptions = {
+    dialRadius: 40,
+    dialStartAngle: 135,
+    dialEndAngle: 45,
+    value: 10,
+    max: 100,
+    min: 0,
+    valueDialClass: "value",
+    valueClass: "value-text",
+    dialClass: "dial",
+    gaugeClass: "gauge",
+    showValue: true,
+    gaugeColor: null,
+    label: function(val) {return Math.round(val) + "°C";} // returns a string label that will be rendered in the center
+}
+
+var myGauge = Gauge(document.getElementById("gauge"), gaugeOptions);
+
+
+/* Rickshaw real-time data visualization (UNOPTIMIZED)*/
+
+var updateInterval = 1000;
+
+
+
+//time-series graph stuff
+
+/* Rickshaw.js initialization */
+var charContainer = document.getElementById("chart_container"),
+    chartWidth = window.innerWidth/1.5 + "";
+
+    charContainer.style.width = chartWidth + "px";
+    window.onresize = function() {
+       chartWidth = window.innerWidth/1.5 + "";
+       charContainer.style.width = chartWidth + "px";
+    }
+
+    
+var chart1 = new Rickshaw.Graph({
+  element: document.querySelector("#demo_chart"),
+  width: chartWidth,
+  height: "250",
+  renderer: "line",
+  min: "20",
+  max: "100",
+  series: new Rickshaw.Series.FixedDuration(
+    [
+      {
+        name: "one",
+        color: "#EC644B"
+      }
+    ],
+    undefined,
+    {
+      timeInterval: updateInterval,
+      maxDataPoints: 100
+    }
+  )
+});
+
+var y_axis = new Rickshaw.Graph.Axis.Y({
+  graph: chart1,
+  orientation: "left",
+  tickFormat: function(y) {
+    return y.toFixed(2);
+  },
+  ticks: 5,
+  element: document.getElementById("y_axis")
+});
+
+
+
+/* Function that generates and inserts random datapoint into the chart */
+function addNewPoint(value) {
+  let tmpData = {
+    one: value
+  };
+
+  chart1.series.addData(tmpData);
+  chart1.render();
+}
+
+
+//look for data and change the graphics elements
+
+ socket.on('thermalData', function(data) {
+      
+      console.log("data recieved from node");
+
+      myGauge.setValue(data);
+      
+      addNewPoint(Number(data))
+       
+    });
+
+        </script>
+        <script type="text/javascript">
+
+        </script>
+    </body>
+</html>
